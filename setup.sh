@@ -17,7 +17,7 @@ oc policy add-role-to-user edit system:serviceaccount:ci:jenkins -n prod
 
 # create pipeline in ci
 oc project ci
-oc create -f https://raw.githubusercontent.com/nstrug/tomcat-docker/master/pipeline
+oc create -f https://raw.githubusercontent.com/nstrug/tomcat-docker/master/tomcat-docker-buildconfig.yml
 
 #create buildconfig in dev and tag
 oc project dev
