@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "tomcat-sample-app", "namespace": "",
+      "kind": "DeploymentConfig"}]'
+  creationTimestamp: null
+  labels:
+    name: tomcat-sample-app
+  name: tomcat-sample-pipeline
+spec:
+  output: {}
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: "node('maven') {\n\nstage 'dev-build'\nopenshiftBuild(namespace:
+        'dev', buildConfig: 'tomcat-sample-app', showBuildLogs: 'true')\n\nstage 'dev-verify-deploy'\nopenshiftVerifyDeployment(namespace:
+        'dev', depCfg: 'tomcat-sample-app')\n\nstage 'dev-tag-readyfortest'\nopenshiftTag(namespace:
+        'dev', destinationNamespace: 'dev', srcStream: 'tomcat-sample-app', srcTag: 'latest',
+        destStream: 'tomcat-sample-app', destTag:'readyfortest')\n\nstage 'test-tag-testing'\nopenshiftTag(namespace:
+        'dev', destinationNamespace: 'test', srcStream: 'tomcat-sample-app', srcTag: 'readyfortest',
+        destStream: 'tomcat-sample-app', destTag:'test')\n\nstage 'test-verify-deploy'\nopenshiftVerifyDeployment(namespace:
+        'test', depCfg: 'tomcat-sample-app')\n\nstage 'test-tag-readyforprod'\nopenshiftTag(namespace:
+        'test', destinationNamespace: 'test', srcStream: 'tomcat-sample-app', srcTag: 'test',
+        destStream: 'tomcat-sample-app', destTag:'readyforprod')\n\nstage 'prod-tag-prod'\nopenshiftTag(namespace:
+        'test', destinationNamespace: 'prod', srcStream: 'tomcat-sample-app', srcTag: 'readyforprod',
+        destStream: 'tomcat-sample-app', destTag:'prod')\n\nstage 'prod-verify-deploy'\nopenshiftVerifyDeployment(namespace:
+        'prod', depCfg: 'tomcat-sample-app')\n\nstage 'prod-scale-up'\nopenshiftScale(namespace:
+        'prod', depCfg: 'tomcat-sample-app', replicaCount: '2')\n\nstage 'prod-verify-replicacount'\nopenshiftVerifyDeployment(namespace:
+        'prod', depCfg: 'tomcat-sample-app', replicaCount: '2', verifyReplicaCount: 'true')\n
+        \ \n}\n"
+    type: JenkinsPipeline
+  triggers:
+  - github:
+      secret: secret101
+    type: GitHub
+  - generic:
+      secret: secret101
+    type: Generic
+status:
+  lastVersion: 0
